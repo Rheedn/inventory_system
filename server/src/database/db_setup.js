@@ -105,20 +105,7 @@ export const createTables = async () => {
     // ---------- OPERATION SCHEMA ----------
     await client.query(`CREATE SCHEMA IF NOT EXISTS operation;`);
 
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS operation.transactions (
-        transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID REFERENCES auth.users(user_id) ON DELETE SET NULL,
-        equipment_id UUID REFERENCES inventory.equipments(equipment_id) ON DELETE CASCADE,
-        quantity INT NOT NULL CHECK (quantity > 0),
-        type VARCHAR(20) CHECK (type IN ('outgoing', 'returned')),
-        scanned_by UUID REFERENCES auth.users(user_id) ON DELETE SET NULL,
-        equipment_image TEXT,
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
+    
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS operation.requests (
@@ -138,6 +125,24 @@ export const createTables = async () => {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS operation.transactions (
+        transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES auth.users(user_id) ON DELETE SET NULL,
+        equipment_id UUID REFERENCES inventory.equipment(equipment_id) ON DELETE CASCADE,
+        request_id UUID REFERENCES operation.requests(request_id) ON DELETE CASCADE,
+        quantity INT NOT NULL CHECK (quantity > 0),
+        type VARCHAR(20) CHECK (type IN ('outgoing', 'returned')),
+        checked_out BOOLEAN DEFAULT FALSE,
+        scanned_by UUID REFERENCES auth.users(user_id) ON DELETE SET NULL,
+        equipment_image TEXT,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS operation.request_items (
         item_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -11,7 +11,7 @@ export const fetchStat = async (req, res) => {
     // Build query correctly
     const requestQuery =
       user.role === "admin"
-        ? `SELECT COUNT(*) FROM operation.requests`
+        ? `SELECT COUNT(*) FROM operation.requests WHERE status = 'pending'`
         : `SELECT COUNT(*) FROM operation.requests WHERE user_id = $1 AND status = 'pending'`;
 
     const requestParams = user.role === "admin" ? [] : [user_id];

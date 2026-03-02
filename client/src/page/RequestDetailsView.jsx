@@ -11,7 +11,9 @@ import {
   CheckCircle,
   Loader2,
   XCircle,
+  QrCode,
 } from "lucide-react";
+import PrintQRCodeModal from "../assets/components/modal/PrintQRCodeModal";
 import PageLayOut from "../layout/PageLayOut";
 import { useState } from "react";
 const RequestDetailView = ({
@@ -21,6 +23,7 @@ const RequestDetailView = ({
   onApprove,
   onDecline,
   onScanEquipment,
+  onManualScan,
   formatDate,
   formatDateTime,
   getStatusIcon,
@@ -29,6 +32,10 @@ const RequestDetailView = ({
   const [declineReason, setDeclineReason] = useState("");
   const [showDeclineForm, setShowDeclineForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printValue, setPrintValue] = useState(null);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualQr, setManualQr] = useState("");
   // const { use}
 
   const handleDeclineSubmit = () => {
@@ -103,6 +110,11 @@ const RequestDetailView = ({
                       <div className="text-sm text-gray-500">
                         {item.category_name}
                       </div>
+                      {request.status === "approved" && item.qr_code && (
+                        <div className="text-xs text-gray-600 mt-1 font-mono">
+                          QR: {item.qr_code}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -112,6 +124,20 @@ const RequestDetailView = ({
                     <div className="text-sm text-gray-500">
                       Available: {item.quantity}
                     </div>
+                    {request.status === "approved" && userRole === "staff" && (
+                      <div className="mt-2">
+                        <button
+                          onClick={() => {
+                            setPrintValue(item.qr_code || item.good_id);
+                            setShowPrintModal(true);
+                          }}
+                          className="inline-flex items-center space-x-2 px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                        >
+                          <QrCode className="w-4 h-4" />
+                          <span>Print QR</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
@@ -213,13 +239,60 @@ const RequestDetailView = ({
             )}
 
             {request.status === "approved" && (
-              <button
-                onClick={() => onScanEquipment(request)}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-              >
-                <Scan className="w-5 h-5" />
-                <span>Scan Equipment for Checkout</span>
-              </button>
+              <div>
+                <button
+                  onClick={() => onScanEquipment(request)}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Scan className="w-5 h-5" />
+                  <span>Scan Equipment for Checkout</span>
+                </button>
+
+                <div className="mt-3">
+                  <button
+                    onClick={() => setShowManualInput((s) => !s)}
+                    className="w-full inline-flex items-center justify-center space-x-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    <span>{showManualInput ? "Hide QR Input" : "Enter QR Code"}</span>
+                  </button>
+
+                  {showManualInput && (
+                    <div className="mt-3 space-y-2">
+                      <input
+                        value={manualQr}
+                        onChange={(e) => setManualQr(e.target.value)}
+                        placeholder="Paste or type QR code here"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            if (!manualQr || !manualQr.trim()) return;
+                            if (typeof onManualScan === "function") {
+                              onManualScan(request, manualQr.trim());
+                            }
+                            setManualQr("");
+                            setShowManualInput(false);
+                          }}
+                          className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+                        >
+                          Submit QR
+                        </button>
+                        <button
+                          onClick={() => {
+                            setManualQr("");
+                            setShowManualInput(false);
+                          }}
+                          className="flex-1 border border-gray-300 py-2 rounded-md hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -266,7 +339,7 @@ const RequestDetailView = ({
           </h2>
           <div className="space-y-4">
             <div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+              {/* <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
                 <Calendar className="w-4 h-4" />
                 <span>Rental Period</span>
               </div>
@@ -277,7 +350,7 @@ const RequestDetailView = ({
               <div className="text-xs text-gray-500">
                 {request.total_days?.days || 0} day
                 {(request.total_days?.days || 0) !== 1 ? "s" : ""}
-              </div>
+              </div> */}
             </div>
 
             <div>
@@ -330,6 +403,9 @@ const RequestDetailView = ({
     </div>
   </div>
 </div>
+{showPrintModal && (
+  <PrintQRCodeModal onClose={() => setShowPrintModal(false)} value={printValue} />
+)}
 </PageLayOut>
   );
 };

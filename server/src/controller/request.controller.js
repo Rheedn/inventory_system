@@ -86,6 +86,11 @@ export const updateRequestStatus = async (req, res) => {
       activeUser,
       decline_reason
     );
+
+    // If updateStatus indicates no change (e.g., already approved), return early
+    if (response && response.no_change) {
+      return res.status(200).json({ success: true, message: response.message, data: response });
+    }
     if (status === "approved") {
       // create transaction log for approved equipment request
       const requestItems = await pool.query(

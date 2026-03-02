@@ -94,7 +94,7 @@ const Sidebar = ({ isCollapsed, onToggle, user }) => {
   ];
 
   const utilitySections = [
-    { icon: Download, title: "Backup / Restore", route: "/backup" },
+    
   ];
 
   const handleLogout = async () => {

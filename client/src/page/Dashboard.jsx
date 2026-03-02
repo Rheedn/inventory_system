@@ -32,40 +32,40 @@ const Dashboard = () => {
   // Stats data based on the specification
   const stats = [
     {
-      title: "Total Equipment",
-      value: fetchedStat.total_equipment || "240",
+      title: "Total Stock",
+      value: fetchedStat.total_equipment || "0",
       change: "+12%",
       trend: "up",
       icon: Package,
       color: "red",
-      description: "Total registered equipment",
+      description: "Total items in inventory",
     },
     {
-      title: "Borrowed Equipment",
-      value: "56",
+      title: "Allocated Stock",
+      value: "0",
       change: "+8%",
       trend: "up",
       icon: Users,
       color: "red",
-      description: "Currently borrowed items",
+      description: "Items currently allocated or reserved",
     },
     {
-      title: "Pending Requests",
+      title: "Pending Approvals",
       value: fetchedStat?.pending_requests ,
       change: "+2%",
       trend: "up",
       icon: Clock,
       color: "red",
-      description: "Items past return date",
+      description: "Requests awaiting admin approval",
     },
     {
-      title: "Active Borrowers",
-      value: "31",
+      title: "Active Allocations",
+      value: "0",
       change: "+5%",
       trend: "up",
       icon: Users,
       color: "red",
-      description: "Users with active borrow records",
+      description: "Users with active allocations",
     },
   ];
 
@@ -74,7 +74,7 @@ const Dashboard = () => {
       id: 1,
       user: "John Smith",
       equipment: "Drill Machine",
-      action: "borrowed",
+      action: "issued",
       time: "2 hours ago",
       status: "active",
     },
@@ -82,7 +82,7 @@ const Dashboard = () => {
       id: 2,
       user: "Sarah Johnson",
       equipment: "Power Washer",
-      action: "returned",
+      action: "restocked",
       time: "4 hours ago",
       status: "completed",
     },
@@ -106,7 +106,7 @@ const Dashboard = () => {
       id: 5,
       user: "Robert Wilson",
       equipment: "Generator",
-      action: "borrowed",
+      action: "issued",
       time: "1 day ago",
       status: "active",
     },
@@ -357,7 +357,7 @@ const Dashboard = () => {
                     >
                       <Clock className="w-5 h-5 text-red-600" />
                       <span className="font-medium text-gray-900">
-                        Process Returns
+                        Receive Stock
                       </span>
                     </button>
                     <button className="w-full flex items-center space-x-3 p-3 text-left rounded-lg border border-gray-200 hover:border-red-300 hover:bg-red-50 transition-colors">
@@ -391,7 +391,7 @@ const Dashboard = () => {
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-red-600">12</div>
                   <div className="text-sm text-gray-600 mt-1">
-                    Active Borrowings
+                    Active Allocations
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">

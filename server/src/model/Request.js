@@ -81,6 +81,29 @@ export class Request {
     console.log(activeUser);
     const updated_by = activeUser.user_id;
 
+    // Ensure we only approve when request is currently pending
+    try {
+      const cur = await pool.query(
+        `SELECT status FROM operation.requests WHERE request_id = $1 LIMIT 1`,
+        [request_id]
+      );
+      if (!cur.rows.length) {
+        return { success: false, message: "Request not found", no_change: true };
+      }
+      const currentStatus = cur.rows[0].status;
+      if (status === "approved" && currentStatus !== "pending") {
+        return {
+          success: false,
+          message: `Request is already '${currentStatus}', approval skipped`,
+          no_change: true,
+          current_status: currentStatus,
+        };
+      }
+    } catch (err) {
+      console.error("Error checking current request status:", err.message);
+      throw err;
+    }
+
     const approve_query_base = `UPDATE operation.requests SET status = $1, approved_by = $2, approved_at = NOW(), updated_at = NOW()`;
     const decline_query_base = `UPDATE operation.requests SET status = $1, declined_by = $2, declined_at = NOW(), updated_at = NOW(), decline_reason = $3`;
 
@@ -145,6 +168,7 @@ export class Request {
             ri.request_id,
             e.equipment_id AS good_id,
             e.name,
+            e.qr_code,
             e.quantity,
             ri.quantity AS requested_quantity,
             c.name AS category_name
@@ -161,6 +185,7 @@ export class Request {
           equipmentMap[eq.request_id].push({
             good_id: eq.good_id,
             equipment_name: eq.name,
+            qr_code: eq.qr_code,
             quantity: eq.quantity,
             requested_quantity: eq.requested_quantity,
             category_name: eq.category_name,

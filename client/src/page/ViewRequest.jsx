@@ -119,6 +119,22 @@ const ViewRequests = () => {
     setScannedData(null);
   };
 
+  const handleManualScan = (request, qrCode) => {
+    setSelectedRequest(request);
+
+    const mockScannedData = {
+      equipment_id: request.equipment?.[0]?.good_id || request.equipment?.[0]?.equipment_id || "unknown",
+      equipment_name: request.equipment?.[0]?.equipment_name || "Unknown Equipment",
+      equipment_category: request.equipment?.[0]?.category_name || "General Equipment",
+      qr_code: qrCode,
+      status: "available",
+      quantity: request.equipment?.[0]?.requested_quantity || 1,
+    };
+
+    // Use the checkout routine with the provided scanned data
+    handleCompleteCheckout(mockScannedData);
+  };
+
   const handleCloseScanner = () => {
     setShowScanner(false);
     setScanning(false);
@@ -149,32 +165,36 @@ const ViewRequests = () => {
     }, 2000);
   };
 
-  const handleCompleteCheckout = () => {
-    if (!scannedData) {
+  const handleCompleteCheckout = (scannedParam) => {
+    const dataToUse = scannedParam || scannedData;
+    if (!dataToUse) {
       toast.error("Please scan equipment first");
       return;
     }
 
-    // Mock transaction creation
-    const transactionData = {
+    const payload = {
       request_id: selectedRequest.request_id,
-      equipment_id: scannedData.equipment_id,
-      equipment_name: scannedData.equipment_name,
-      quantity: scannedData.quantity,
-      type: "outgoing",
-      scanned_by: user.user_id,
-      scanned_by_name: user.name || "Admin User",
-      notes: `Equipment checked out for request ${selectedRequest.request_id}`,
+      equipment_id: dataToUse.equipment_id,
+      quantity: dataToUse.quantity || 1,
+      qr_code: dataToUse.qr_code || null,
     };
 
-    // In real app, you would call your API here to create a transaction
-    console.log("Creating checkout transaction:", transactionData);
-
-    toast.success("Equipment checked out successfully!");
-    handleCloseScanner();
-
-    // Refresh the requests list
-    handleRefresh();
+    const url = `${import.meta.env.VITE_SERVER_API_BASE_URL}/transactions/checkout`;
+    axios
+      .post(url, payload, { withCredentials: true })
+      .then((res) => {
+        if (res.data && res.data.success) {
+          toast.success("Equipment checked out successfully!");
+          handleCloseScanner();
+          handleRefresh();
+        } else {
+          toast.error(res.data?.message || "Failed to checkout equipment");
+        }
+      })
+      .catch((err) => {
+        console.error("Checkout API error:", err);
+        toast.error("Failed to complete checkout");
+      });
   };
 
   const filteredRequests =
@@ -360,6 +380,7 @@ const ViewRequests = () => {
           onApprove={handleApprove}
           onDecline={handleDecline}
           onScanEquipment={handleOpenScanner}
+          onManualScan={handleManualScan}
           formatDate={formatDate}
           formatDateTime={formatDateTime}
           getStatusIcon={getStatusIcon}
